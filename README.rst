@@ -8,8 +8,8 @@ Example:
 
 ::
 
-    python imapcopy.py imap.googlemail.com username@googlemail.com:password \
-    mail.example.com "christoph@example.com:password" \
+    python imapcopy.py imap.googlemail.com:993 username@googlemail.com:password \
+    mail.example.com "username@example.com:password" \
     "[Google Mail]/Alle Nachrichten" DestinationFolder
 
 Usage:
