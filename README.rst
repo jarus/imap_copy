@@ -31,5 +31,9 @@ Usage:
 
     optional arguments:
       -h, --help        show this help message and exit
+      -c, --create-mailboxes
+                        Create the mailboxes on destination
       -q, --quiet       ppsssh... be quiet. (no output)
       -v, --verbose     more output please (debug level)
+
+Only tested on Python 2.7.4.

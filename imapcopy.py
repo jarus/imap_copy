@@ -30,7 +30,7 @@ class IMAP_Copy(object):
     mailbox_mapping = []
 
     def __init__(self, source_server, destination_server, mailbox_mapping,
-                 source_auth=(), destination_auth=()):
+                 source_auth=(), destination_auth=(), create_mailboxes=False):
 
         self.logger = logging.getLogger("IMAP_Copy")
 
@@ -40,6 +40,7 @@ class IMAP_Copy(object):
         self.destination_auth = destination_auth
 
         self.mailbox_mapping = mailbox_mapping
+        self.create_mailboxes = create_mailboxes
 
     def _connect(self, target):
         data = getattr(self, target)
@@ -80,28 +81,41 @@ class IMAP_Copy(object):
         self._disconnect('destination')
 
     def copy(self, source_mailbox, destination_mailbox):
-        status, data = self._conn_source.select(source_mailbox)
+        # Connect to source and open mailbox
+        status, data = self._conn_source.select(source_mailbox, True)
         if status != "OK":
-            self.logger.error(data[0])
+            self.logger.error("Couldn't open source mailbox %s" %
+                              source_mailbox)
             sys.exit(2)
 
+        # Connect to destination and open or create mailbox
         status, data = self._conn_destination.select(destination_mailbox)
-        if status != "OK":
-            self.logger.error(data[0])
+        if status != "OK" and not self.create_mailboxes:
+            self.logger.error("Couldn't open destination mailbox %s" %
+                              destination_mailbox)
             sys.exit(2)
+        else:
+            self.logger.info("Create destination mailbox %s" %
+                             destination_mailbox)
+            self._conn_destination.create(destination_mailbox)
+            status, data = self._conn_destination.select(destination_mailbox)
 
+        # Look for mails
         self.logger.info("Looking for mails in %s" % source_mailbox)
         status, data = self._conn_source.search(None, 'ALL')
-        data = data[0].split()
+        data = data[0].split()[:1]
         mail_count = len(data)
 
         self.logger.info("Start copy %s => %s (%d mails)" % (
                          source_mailbox, destination_mailbox, mail_count))
         progress_count = 0
         for msg_num in data:
-            status, data = self._conn_source.fetch(msg_num, '(RFC822)')
+            status, data = self._conn_source.fetch(msg_num, '(RFC822 FLAGS)')
+            message = data[0][1]
+            flags = data[1][8:][:-2]  # Not perfect.. Waiting for bug reports
+
             self._conn_destination.append(
-                destination_mailbox, None, None, data[0][1]
+                destination_mailbox, flags, None, message
             )
 
             progress_count += 1
@@ -137,6 +151,9 @@ def main():
     parser.add_argument('mailboxes', type=str, nargs='+',
                         help='List of mailboxes alternate between source '
                              'mailbox and destination mailbox.')
+    parser.add_argument('-c', '--create-mailboxes', dest='create_mailboxes',
+                        action="store_true", default=False,
+                        help='Create the mailboxes on destination')
     parser.add_argument('-q', '--quiet', action="store_true", default=False,
                         help='ppsssh... be quiet. (no output)')
     parser.add_argument('-v', '--verbose', action="store_true", default=False,
@@ -164,7 +181,8 @@ def main():
     mailbox_mapping = zip(args.mailboxes[::2], args.mailboxes[1::2])
 
     imap_copy = IMAP_Copy(source, destination, mailbox_mapping, source_auth,
-                          destination_auth)
+                          destination_auth,
+                          create_mailboxes=args.create_mailboxes)
 
     streamHandler = logging.StreamHandler()
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
