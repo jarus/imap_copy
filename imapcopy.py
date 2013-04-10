@@ -103,7 +103,7 @@ class IMAP_Copy(object):
         # Look for mails
         self.logger.info("Looking for mails in %s" % source_mailbox)
         status, data = self._conn_source.search(None, 'ALL')
-        data = data[0].split()[:1]
+        data = data[0].split()
         mail_count = len(data)
 
         self.logger.info("Start copy %s => %s (%d mails)" % (
