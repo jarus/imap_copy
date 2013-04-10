@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+    imapcopy
+
+    Simple tool to copy folders from one IMAP server to another server.
+
+
+    :copyright: (c) 2013 by Christoph Heer.
+    :license: BSD, see LICENSE for more details.
+"""
+
 import sys
 import imaplib
 import logging
@@ -8,14 +19,12 @@ class IMAP_Copy(object):
 
     source = {
         'host': 'localhost',
-        'port': 993,
-        'use_ssl': True
+        'port': 993
     }
     source_auth = ()
     destination = {
         'host': 'localhost',
-        'port': 993,
-        'use_ssl': True
+        'port': 993
     }
     destination_auth = ()
     mailbox_mapping = []
@@ -37,7 +46,7 @@ class IMAP_Copy(object):
         _auth = getattr(self, target + "_auth")
 
         self.logger.info("Connect to %s (%s)" % (target, _data['host']))
-        if _data['use_ssl'] or _data['port'] == 993:
+        if _data['port'] == 993:
             connection = imaplib.IMAP4_SSL(_data['host'], _data['port'])
         else:
             connection = imaplib.IMAP4(_data['host'], _data['port'])

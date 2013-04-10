@@ -1,18 +1,18 @@
 IMAP Copy
 =========
 
-This is a very simple utils to copy folders from one IMAP server to another server.
+This is a very simple tool to copy folders from one IMAP server to another server.
 
 
 Example:
 
-..
+::
 
     python imapcopy.py imap.googlemail.com username@googlemail.com:password mail.example.com "christoph@example.com:password" "[Google Mail]/Alle Nachrichten" DestinationFolder
 
 Usage:
 
-..
+::
 
     usage: imapcopy.py [-h] [-q] [-v]
                    source source-auth destination destination-auth mailboxes
