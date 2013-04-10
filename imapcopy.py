@@ -42,18 +42,18 @@ class IMAP_Copy(object):
         self.mailbox_mapping = mailbox_mapping
 
     def _connect(self, target):
-        _data = getattr(self, target)
-        _auth = getattr(self, target + "_auth")
+        data = getattr(self, target)
+        auth = getattr(self, target + "_auth")
 
-        self.logger.info("Connect to %s (%s)" % (target, _data['host']))
-        if _data['port'] == 993:
-            connection = imaplib.IMAP4_SSL(_data['host'], _data['port'])
+        self.logger.info("Connect to %s (%s)" % (target, data['host']))
+        if data['port'] == 993:
+            connection = imaplib.IMAP4_SSL(data['host'], data['port'])
         else:
-            connection = imaplib.IMAP4(_data['host'], _data['port'])
+            connection = imaplib.IMAP4(data['host'], data['port'])
 
-        if len(_auth) > 0:
+        if len(auth) > 0:
             self.logger.info("Authenticate at %s" % target)
-            connection.login(*_auth)
+            connection.login(*auth)
 
         setattr(self, '_conn_%s' % target, connection)
         self.logger.info("%s connection established" % target)
@@ -61,6 +61,23 @@ class IMAP_Copy(object):
     def connect(self):
         self._connect('source')
         self._connect('destination')
+
+    def _disconnect(self, target):
+        if not hasattr(self, '_conn_%s' % target):
+            return
+
+        connection = getattr(self, '_conn_%s' % target)
+        if connection.state == 'SELECTED':
+            connection.close()
+            self.logger.info("Close mailbox on %s" % target)
+
+        self.logger.info("Disconnect from %s server" % target)
+        connection.logout()
+        delattr(self, '_conn_%s' % target)
+
+    def disconnect(self):
+        self._disconnect('source')
+        self._disconnect('destination')
 
     def copy(self, source_mailbox, destination_mailbox):
         status, data = self._conn_source.select(source_mailbox)
@@ -95,9 +112,12 @@ class IMAP_Copy(object):
                          source_mailbox, destination_mailbox, mail_count))
 
     def run(self):
-        self.connect()
-        for source_mailbox, destination_mailbox in self.mailbox_mapping:
-            self.copy(source_mailbox, destination_mailbox)
+        try:
+            self.connect()
+            for source_mailbox, destination_mailbox in self.mailbox_mapping:
+                self.copy(source_mailbox, destination_mailbox)
+        finally:
+            self.disconnect()
 
 
 def main():
@@ -158,7 +178,10 @@ def main():
         streamHandler.setLevel(logging.DEBUG)
         imap_copy.logger.setLevel(logging.DEBUG)
 
-    imap_copy.run()
+    try:
+        imap_copy.run()
+    except KeyboardInterrupt:
+        imap_copy.disconnect()
 
 if __name__ == '__main__':
     main()
