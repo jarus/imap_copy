@@ -164,12 +164,12 @@ def main():
     _source = args.source.split(':')
     source = {'host': _source[0]}
     if len(_source) > 1:
-        source['port'] = _source[1]
+        source['port'] = int(_source[1])
 
     _destination = args.destination.split(':')
     destination = {'host': _destination[0]}
     if len(_destination) > 1:
-        destination['port'] = _destination[1]
+        destination['port'] = int(_destination[1])
 
     source_auth = tuple(args.source_auth.split(':'))
     destination_auth = tuple(args.destination_auth.split(':'))
