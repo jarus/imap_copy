@@ -62,4 +62,4 @@ Usage:
       -s N, --skip N    skip the first N message(s)
       -l N, --limit N   only copy N number of message(s)
   
-Only tested on Python 2.7.4.
+Only tested on Python 2.7.
