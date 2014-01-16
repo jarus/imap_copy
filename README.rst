@@ -8,9 +8,9 @@ Example:
 
 ::
 
-    python imapcopy.py imap.googlemail.com:993 username@googlemail.com:password \
-    mail.example.com "username@example.com:password" \
-    "[Google Mail]/Alle Nachrichten" DestinationFolder
+    python imapcopy.py "imap.servername.com.au:993" "username:password" \
+    "imap.googlemail.com:993" "username@gmail.com:password" \
+    "INBOX" "[Google Mail]/All Mail"
 
 Usage:
 
@@ -35,5 +35,7 @@ Usage:
                         Create the mailboxes on destination
       -q, --quiet       ppsssh... be quiet. (no output)
       -v, --verbose     more output please (debug level)
-
+      -s N, --skip N    skip the first N message(s)
+      -l N, --limit N   only copy N number of message(s)
+  
 Only tested on Python 2.7.4.
