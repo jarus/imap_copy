@@ -6,11 +6,35 @@ This is a very simple tool to copy folders from one IMAP server to another serve
 
 Example:
 
+The example below copies all messages from the INBOX of your other server into
+the 'OTHER-SERVER/Inbox' folder of Gmail.
+
 ::
 
-    python imapcopy.py "imap.servername.com.au:993" "username:password" \
+    python imapcopy.py "imap.otherserver.com.au:993" "username:password" \
     "imap.googlemail.com:993" "username@gmail.com:password" \
-    "INBOX" "[Google Mail]/All Mail"
+    "INBOX" "OTHER-SERVER/Inbox" --verbose
+
+Since Gmail throttles terribly the mail upload and download over IMAP, you may
+find the 'skip' and 'limit' options handy. If Gmail disconnected you after
+copying 123 emails out of your total 1000 emails, you may use the following
+command to resume copying skipping the first 123 messages.
+
+::
+
+    python imapcopy.py "imap.otherserver.com.au:993" "username:password" \
+    "imap.googlemail.com:993" "username@gmail.com:password" \
+    "INBOX" "OTHER-SERVER/Inbox" --skip 123
+
+Similarly the 'limit' option allows you to copy only the N number of messages
+excluding the skipped messages. For example, the following command will copy
+message no. 124 to 223 into Gmail.
+
+::
+
+    python imapcopy.py "imap.otherserver.com.au:993" "username:password" \
+    "imap.googlemail.com:993" "username@gmail.com:password" \
+    "INBOX" "OTHER-SERVER/Inbox" --skip 123 --limit 100
 
 Usage:
 
