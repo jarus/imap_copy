@@ -10,6 +10,7 @@
 """
 
 import sys
+import hashlib
 import imaplib
 import logging
 import argparse
@@ -30,7 +31,7 @@ class IMAP_Copy(object):
     mailbox_mapping = []
 
     def __init__(self, source_server, destination_server, mailbox_mapping,
-                 source_auth=(), destination_auth=(), create_mailboxes=False):
+                 source_auth=(), destination_auth=(), create_mailboxes=False, skip=0, limit=0):
 
         self.logger = logging.getLogger("IMAP_Copy")
 
@@ -41,6 +42,9 @@ class IMAP_Copy(object):
 
         self.mailbox_mapping = mailbox_mapping
         self.create_mailboxes = create_mailboxes
+
+        self.skip = skip
+        self.limit = limit
 
     def _connect(self, target):
         data = getattr(self, target)
@@ -80,7 +84,7 @@ class IMAP_Copy(object):
         self._disconnect('source')
         self._disconnect('destination')
 
-    def copy(self, source_mailbox, destination_mailbox):
+    def copy(self, source_mailbox, destination_mailbox, skip, limit):
         # Connect to source and open mailbox
         status, data = self._conn_source.select(source_mailbox, True)
         if status != "OK":
@@ -108,28 +112,44 @@ class IMAP_Copy(object):
 
         self.logger.info("Start copy %s => %s (%d mails)" % (
                          source_mailbox, destination_mailbox, mail_count))
+
         progress_count = 0
+        copy_count = 0
+
         for msg_num in data:
-            status, data = self._conn_source.fetch(msg_num, '(RFC822 FLAGS)')
-            message = data[0][1]
-            flags = data[1][8:][:-2]  # Not perfect.. Waiting for bug reports
-
-            self._conn_destination.append(
-                destination_mailbox, flags, None, message
-            )
-
             progress_count += 1
-            self.logger.info("Copy mail %d of %d" % (
-                             progress_count, mail_count))
+            if progress_count <= skip:
+                self.logger.info("Skipping mail %d of %d" % (
+                    progress_count, mail_count))
+                continue
+            else:
+                status, data = self._conn_source.fetch(msg_num, '(RFC822 FLAGS)')
+                message = data[0][1]
+                flags = data[1][8:][:-2]  # Not perfect.. Waiting for bug reports
 
-        self.logger.info("Copy complete %s => %s (%d mails)" % (
-                         source_mailbox, destination_mailbox, mail_count))
+                self._conn_destination.append(
+                    destination_mailbox, flags, None, message
+                )
+
+                copy_count += 1
+                message_md5 = hashlib.md5(message).hexdigest()
+
+                self.logger.info("Copy mail %d of %d (copy_count=%d, md5(message)=%s)" % (
+                    progress_count, mail_count, copy_count, message_md5))
+
+                if limit > 0 and copy_count >= limit:
+                    self.logger.info("Copy limit %d reached (copy_count=%d)" % (
+                        limit, copy_count))
+                    break
+
+        self.logger.info("Copy complete %s => %s (%d out of %d mails copied)" % (
+                         source_mailbox, destination_mailbox, copy_count, mail_count))
 
     def run(self):
         try:
             self.connect()
             for source_mailbox, destination_mailbox in self.mailbox_mapping:
-                self.copy(source_mailbox, destination_mailbox)
+                self.copy(source_mailbox, destination_mailbox, self.skip, self.limit)
         finally:
             self.disconnect()
 
@@ -159,6 +179,17 @@ def main():
     parser.add_argument('-v', '--verbose', action="store_true", default=False,
                         help='more output please (debug level)')
 
+    def check_negative(value):
+        ivalue = int(value)
+        if ivalue < 0:
+            raise argparse.ArgumentTypeError("%s is an invalid positive integer value" % value)
+        return ivalue
+
+    parser.add_argument("-s", "--skip", default=0, metavar="N", type=check_negative,
+                        help='skip the first N message(s)')
+    parser.add_argument("-l", "--limit", default=0, metavar="N", type=check_negative,
+                        help='only copy N number of message(s)')
+
     args = parser.parse_args()
 
     _source = args.source.split(':')
@@ -182,7 +213,8 @@ def main():
 
     imap_copy = IMAP_Copy(source, destination, mailbox_mapping, source_auth,
                           destination_auth,
-                          create_mailboxes=args.create_mailboxes)
+                          create_mailboxes=args.create_mailboxes,
+                          skip=args.skip, limit=args.limit)
 
     streamHandler = logging.StreamHandler()
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
