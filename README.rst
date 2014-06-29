@@ -10,6 +10,7 @@ The example below copies all messages from the INBOX of your other server into
 the 'OTHER-SERVER/Inbox' folder of Gmail.
 
 ::
+
     python imapcopy.py "imap.otherserver.com.au:993" "username:password" \
     "imap.googlemail.com:993" "username@gmail.com:password" \
     "INBOX" "OTHER-SERVER/Inbox" --verbose
@@ -21,6 +22,7 @@ you may use the following command to resume copying skipping the first 123
 messages.
 
 ::
+
     python imapcopy.py "imap.otherserver.com.au:993" "username:password" \
     "imap.googlemail.com:993" "username@gmail.com:password" \
     "INBOX" "OTHER-SERVER/Inbox" --skip 123
@@ -30,6 +32,7 @@ excluding the skipped messages. For example, the following command will copy
 message no. 124 to 223 into Gmail.
 
 ::
+
     python imapcopy.py "imap.otherserver.com.au:993" "username:password" \
     "imap.googlemail.com:993" "username@gmail.com:password" \
     "INBOX" "OTHER-SERVER/Inbox" --skip 123 --limit 100
@@ -37,6 +40,7 @@ message no. 124 to 223 into Gmail.
 Usage:
 
 ::
+
     usage: imapcopy.py [-h] [-q] [-v]
                    source source-auth destination destination-auth mailboxes
                    [mailboxes ...]
