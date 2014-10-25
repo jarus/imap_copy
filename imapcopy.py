@@ -7,6 +7,10 @@
 
     :copyright: (c) 2013 by Christoph Heer.
     :license: BSD, see LICENSE for more details.
+ 
+    example usage:
+python imapcopy.py -m -c -l 10 incoming.mail.net:143 username@something.com:password incoming.mail.net:143 username@something.com:password INBOX INBOX
+
 """
 
 import sys
@@ -14,9 +18,12 @@ import hashlib
 import imaplib
 import logging
 import argparse
+import re
 
 
 class IMAP_Copy(object):
+
+    pattern_uid = re.compile('\d+ \(UID (?P<uid>\d+)\)')
 
     source = {
         'host': 'localhost',
@@ -31,7 +38,7 @@ class IMAP_Copy(object):
     mailbox_mapping = []
 
     def __init__(self, source_server, destination_server, mailbox_mapping,
-                 source_auth=(), destination_auth=(), create_mailboxes=False, skip=0, limit=0):
+                 source_auth=(), destination_auth=(), create_mailboxes=False, skip=0, limit=0, move_mails=False):
 
         self.logger = logging.getLogger("IMAP_Copy")
 
@@ -42,6 +49,7 @@ class IMAP_Copy(object):
 
         self.mailbox_mapping = mailbox_mapping
         self.create_mailboxes = create_mailboxes
+        self.move_mails = move_mails
 
         self.skip = skip
         self.limit = limit
@@ -84,9 +92,14 @@ class IMAP_Copy(object):
         self._disconnect('source')
         self._disconnect('destination')
 
+    def parse_uid(self, data):
+        match = self.pattern_uid.match(data)
+        return match.group('uid')
+
     def copy(self, source_mailbox, destination_mailbox, skip, limit):
         # Connect to source and open mailbox
-        status, data = self._conn_source.select(source_mailbox, True)
+        self.logger.info("opening source mail with readonly=%s" % str(not self.move_mails))
+        status, data = self._conn_source.select(source_mailbox, not self.move_mails)
         if status != "OK":
             self.logger.error("Couldn't open source mailbox %s" %
                               source_mailbox)
@@ -127,9 +140,25 @@ class IMAP_Copy(object):
                 message = data[0][1]
                 flags = data[1][8:][:-2]  # Not perfect.. Waiting for bug reports
 
-                self._conn_destination.append(
+                result = self._conn_destination.append(
                     destination_mailbox, flags, None, message
                 )
+                if self.move_mails:
+                    try:
+                        self.logger.info("Deleting mail")
+                        res, del_data = self._conn_source.store(msg_num, '+FLAGS', '\\Deleted')
+                        self.logger.info("Returned: %s" % str(res))
+                        #self._conn_source.expunge
+                    except Exception as e:
+                        self.logger.info("ERROR: failed to remove: %s\n" % str(e))
+                    # alternative way below
+                    #resp, data_uid = self._conn_source.fetch(msg_num, "(UID)")
+                    #self.logger.info("Resp: %s(%s)" % (str(resp), data_uid[0]))
+                    #msg_uid = self.parse_uid(data_uid[0])
+
+                    #result = imap.uid('COPY', msg_uid, 'INBOX')
+                    #mov, data = self._conn_source.uid('STORE', msg_uid , '+FLAGS', '(\Deleted)')
+                    #self.logger.info("removed message(%s) with %s" % (str(msg_uid), mov))
 
                 copy_count += 1
                 message_md5 = hashlib.md5(message).hexdigest()
@@ -142,6 +171,13 @@ class IMAP_Copy(object):
                         limit, copy_count))
                     break
 
+        if self.move_mails:
+            self.logger.info("Expunging mails")
+            try:
+                self._conn_source.expunge()
+            except Exception as e:
+                self.logger.info("Error whilst expunging mails: %s" % str(e))
+
         self.logger.info("Copy complete %s => %s (%d out of %d mails copied)" % (
                          source_mailbox, destination_mailbox, copy_count, mail_count))
 
@@ -150,6 +186,8 @@ class IMAP_Copy(object):
             self.connect()
             for source_mailbox, destination_mailbox in self.mailbox_mapping:
                 self.copy(source_mailbox, destination_mailbox, self.skip, self.limit)
+        except Exception as e:
+            self.logger.info("ERROR: whilst connecting: %s" % str(e))
         finally:
             self.disconnect()
 
@@ -174,6 +212,9 @@ def main():
     parser.add_argument('-c', '--create-mailboxes', dest='create_mailboxes',
                         action="store_true", default=False,
                         help='Create the mailboxes on destination')
+    parser.add_argument('-m', '--move_mails', action="store_true",
+                        dest='move_mails', default=False,
+                        help='move mails(delete from src)')
     parser.add_argument('-q', '--quiet', action="store_true", default=False,
                         help='ppsssh... be quiet. (no output)')
     parser.add_argument('-v', '--verbose', action="store_true", default=False,
@@ -214,7 +255,7 @@ def main():
     imap_copy = IMAP_Copy(source, destination, mailbox_mapping, source_auth,
                           destination_auth,
                           create_mailboxes=args.create_mailboxes,
-                          skip=args.skip, limit=args.limit)
+                          skip=args.skip, limit=args.limit, move_mails=args.move_mails)
 
     streamHandler = logging.StreamHandler()
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
