@@ -148,17 +148,8 @@ class IMAP_Copy(object):
                         self.logger.info("Deleting mail")
                         res, del_data = self._conn_source.store(msg_num, '+FLAGS', '\\Deleted')
                         self.logger.info("Returned: %s" % str(res))
-                        #self._conn_source.expunge
                     except Exception as e:
                         self.logger.info("ERROR: failed to remove: %s\n" % str(e))
-                    # alternative way below
-                    #resp, data_uid = self._conn_source.fetch(msg_num, "(UID)")
-                    #self.logger.info("Resp: %s(%s)" % (str(resp), data_uid[0]))
-                    #msg_uid = self.parse_uid(data_uid[0])
-
-                    #result = imap.uid('COPY', msg_uid, 'INBOX')
-                    #mov, data = self._conn_source.uid('STORE', msg_uid , '+FLAGS', '(\Deleted)')
-                    #self.logger.info("removed message(%s) with %s" % (str(msg_uid), mov))
 
                 copy_count += 1
                 message_md5 = hashlib.md5(message).hexdigest()
