@@ -17,7 +17,6 @@ import argparse
 
 
 class IMAP_Copy(object):
-
     source = {
         'host': 'localhost',
         'port': 993
@@ -32,7 +31,7 @@ class IMAP_Copy(object):
 
     def __init__(self, source_server, destination_server, mailbox_mapping,
                  source_auth=(), destination_auth=(), create_mailboxes=False,
-		 recurse=False, skip=0, limit=0):
+                 recurse=False, skip=0, limit=0):
 
         self.logger = logging.getLogger("IMAP_Copy")
 
@@ -47,7 +46,7 @@ class IMAP_Copy(object):
         self.skip = skip
         self.limit = limit
 
-	self.recurse = recurse
+        self.recurse = recurse
 
     def _connect(self, target):
         data = getattr(self, target)
@@ -65,9 +64,10 @@ class IMAP_Copy(object):
 
         setattr(self, '_conn_%s' % target, connection)
         self.logger.info("%s connection established" % target)
-	# Detecting delimiter on destination server
-	code, mailbox_list = connection.list()
-	self.delimiter = mailbox_list[0].split('"')[1]
+        # Detecting delimiter on destination server
+        code, mailbox_list = connection.list()
+        self.delimiter = mailbox_list[0].split('"')[1]
+
     def connect(self):
         self._connect('source')
         self._connect('destination')
@@ -89,23 +89,23 @@ class IMAP_Copy(object):
         self._disconnect('source')
         self._disconnect('destination')
 
-    def copy(self, source_mailbox, destination_mailbox, skip, limit, recurse_level = 0):
+    def copy(self, source_mailbox, destination_mailbox, skip, limit, recurse_level=0):
         if self.recurse:
-        	self.logger.info("Getting list of mailboxes under %s" % (source_mailbox))
-                connection = self._conn_source
-                typ, data = connection.list(source_mailbox)
-		self.logger.info("List of folders - %s" % (data))
-		for d in data:
-			if d:
-				new_source_mailbox = d.split('"')[3] # Getting submailbox name
-				if new_source_mailbox.count('/') == recurse_level:
-		        	        self.logger.info("Recursing into %s" % (new_source_mailbox))
-					new_destination_mailbox = new_source_mailbox.split("/")[recurse_level]
-					self.copy(new_source_mailbox, destination_mailbox + self.delimiter + new_destination_mailbox, skip, limit, recurse_level + 1)
-	
-	# There should be no files stored in / so we are bailing out
-	if source_mailbox == '':
-		return
+            self.logger.info("Getting list of mailboxes under %s" % source_mailbox)
+            connection = self._conn_source
+            typ, data = connection.list(source_mailbox)
+            for d in data:
+                if d:
+                    new_source_mailbox = d.split('"')[3]  # Getting submailbox name
+                    if new_source_mailbox.count('/') == recurse_level:
+                        self.logger.info("Recursing into %s" % new_source_mailbox)
+                        new_destination_mailbox = new_source_mailbox.split("/")[recurse_level]
+                        self.copy(new_source_mailbox, destination_mailbox + self.delimiter + new_destination_mailbox,
+                                  skip, limit, recurse_level + 1)
+
+        # There should be no files stored in / so we are bailing out
+        if source_mailbox == '':
+            return
 
         # Connect to source and open mailbox
         status, data = self._conn_source.select(source_mailbox, True)
@@ -133,7 +133,7 @@ class IMAP_Copy(object):
         mail_count = len(data)
 
         self.logger.info("Start copy %s => %s (%d mails)" % (
-                         source_mailbox, destination_mailbox, mail_count))
+            source_mailbox, destination_mailbox, mail_count))
 
         progress_count = 0
         copy_count = 0
@@ -165,7 +165,7 @@ class IMAP_Copy(object):
                     break
 
         self.logger.info("Copy complete %s => %s (%d out of %d mails copied)" % (
-                         source_mailbox, destination_mailbox, copy_count, mail_count))
+            source_mailbox, destination_mailbox, copy_count, mail_count))
 
     def run(self):
         try:
@@ -197,7 +197,7 @@ def main():
                         action="store_true", default=False,
                         help='Create the mailboxes on destination')
     parser.add_argument('-r', '--recurse', dest='recurse', action="store_true",
-			default=False,help='Recurse into submailboxes')
+                        default=False, help='Recurse into submailboxes')
     parser.add_argument('-q', '--quiet', action="store_true", default=False,
                         help='ppsssh... be quiet. (no output)')
     parser.add_argument('-v', '--verbose', action="store_true", default=False,
@@ -237,7 +237,7 @@ def main():
 
     imap_copy = IMAP_Copy(source, destination, mailbox_mapping, source_auth,
                           destination_auth, create_mailboxes=args.create_mailboxes,
-			  recurse=args.recurse, skip=args.skip, limit=args.limit)
+                          recurse=args.recurse, skip=args.skip, limit=args.limit)
 
     streamHandler = logging.StreamHandler()
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
@@ -255,6 +255,7 @@ def main():
         imap_copy.run()
     except KeyboardInterrupt:
         imap_copy.disconnect()
+
 
 if __name__ == '__main__':
     main()
