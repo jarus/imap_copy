@@ -230,7 +230,7 @@ def main():
     destination_auth = tuple(args.destination_auth.split(':'))
 
     if len(args.mailboxes) % 2 != 0:
-        print "Not valid count of mailboxes! %s" % (args.mailboxes, )
+        print "Not valid count of mailboxes!"
         sys.exit(1)
 
     mailbox_mapping = zip(args.mailboxes[::2], args.mailboxes[1::2])
