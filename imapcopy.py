@@ -89,11 +89,12 @@ class IMAP_Copy(object):
         self._disconnect('source')
         self._disconnect('destination')
 
-    def copy(self, source_mailbox, destination_mailbox, skip, limit, recurse_level = 1):
+    def copy(self, source_mailbox, destination_mailbox, skip, limit, recurse_level = 0):
         if self.recurse:
         	self.logger.info("Getting list of mailboxes under %s" % (source_mailbox))
                 connection = self._conn_source
                 typ, data = connection.list(source_mailbox)
+		self.logger.info("List of folders - %s" % (data))
 		for d in data:
 			if d:
 				new_source_mailbox = d.split('"')[3] # Getting submailbox name
@@ -103,7 +104,7 @@ class IMAP_Copy(object):
 					self.copy(new_source_mailbox, destination_mailbox + self.delimiter + new_destination_mailbox, skip, limit, recurse_level + 1)
 	
 	# There should be no files stored in / so we are bailing out
-	if source_mailbox == '/':
+	if source_mailbox == '':
 		return
 
         # Connect to source and open mailbox
