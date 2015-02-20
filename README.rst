@@ -58,6 +58,8 @@ Usage:
       -h, --help        show this help message and exit
       -c, --create-mailboxes
                         Create the mailboxes on destination
+      -r, --recurse     Recurse into submailboxes
+
       -q, --quiet       ppsssh... be quiet. (no output)
       -v, --verbose     more output please (debug level)
       -s N, --skip N    skip the first N message(s)
