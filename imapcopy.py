@@ -163,7 +163,6 @@ class IMAP_Copy(object):
             typ, data = connection.list(source_mailbox)
             for d in data:
                 if d:
-                    self.logger.info("data: %s " % d)
                     l_resp = d.split('"')
                     # response = '(\HasChildren) "/" INBOX'
                     if len(l_resp) == 3:
