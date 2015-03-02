@@ -173,7 +173,7 @@ class IMAP_Copy(object):
                             # maybe better use regex to replace only start of the souce name
                             dest_mbox = source_mbox.replace(source_mailbox, destination_mailbox)
                             self.logger.info("starting copy of mailbox %s to %s " % (source_mbox, dest_mbox))
-                            self.copy(source_mbox, dest_mbox, skip, limit)
+                            self.copy(source_mbox, dest_mbox, skip, limit, False)
 
     def run(self):
         try:
