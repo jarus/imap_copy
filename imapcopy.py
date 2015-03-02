@@ -89,19 +89,7 @@ class IMAP_Copy(object):
         self._disconnect('source')
         self._disconnect('destination')
 
-    def copy(self, source_mailbox, destination_mailbox, skip, limit, recurse_level=0):
-        if self.recurse:
-            self.logger.info("Getting list of mailboxes under %s" % source_mailbox)
-            connection = self._conn_source
-            typ, data = connection.list(source_mailbox)
-            for d in data:
-                if d:
-                    new_source_mailbox = d[3]  # Getting submailbox name
-                    if new_source_mailbox.count('/') == recurse_level:
-                        self.logger.info("Recursing into %s" % new_source_mailbox)
-                        new_destination_mailbox = new_source_mailbox.split("/")[recurse_level]
-                        self.copy(new_source_mailbox, destination_mailbox + self.delimiter + new_destination_mailbox,
-                                  skip, limit, recurse_level + 1)
+    def copy(self, source_mailbox, destination_mailbox, skip, limit, recurse=True):
 
         # There should be no files stored in / so we are bailing out
         if source_mailbox == '':
@@ -168,6 +156,25 @@ class IMAP_Copy(object):
 
         self.logger.info("Copy complete %s => %s (%d out of %d mails copied)" % (
             source_mailbox, destination_mailbox, copy_count, mail_count))
+
+        if self.recurse and recurse:
+            self.logger.info("Getting list of mailboxes under %s" % source_mailbox)
+            connection = self._conn_source
+            typ, data = connection.list(source_mailbox)
+            for d in data:
+                if d:
+                    self.logger.info("data: %s " % d)
+                    l_resp = d.split('"')
+                    # response = '(\HasChildren) "/" INBOX'
+                    if len(l_resp) == 3:
+
+                        source_mbox = d.split('"')[2].strip()
+                        # make sure we don't have a recursive loop
+                        if source_mbox != source_mailbox:
+                            # maybe better use regex to replace only start of the souce name
+                            dest_mbox = source_mbox.replace(source_mailbox, destination_mailbox)
+                            self.logger.info("starting copy of mailbox %s to %s " % (source_mbox, dest_mbox))
+                            self.copy(source_mbox, dest_mbox, skip, limit)
 
     def run(self):
         try:
