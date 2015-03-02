@@ -144,10 +144,10 @@ class IMAP_Copy(object):
                 )
 
                 copy_count += 1
-                message_md5 = hashlib.md5(message).hexdigest()
+                message_sha1 = hashlib.sha1(message).hexdigest()
 
-                self.logger.info("Copy mail %d of %d (copy_count=%d, md5(message)=%s)" % (
-                    progress_count, mail_count, copy_count, message_md5))
+                self.logger.info("Copy mail %d of %d (copy_count=%d, sha1(message)=%s)" % (
+                    progress_count, mail_count, copy_count, message_sha1))
 
                 if limit > 0 and copy_count >= limit:
                     self.logger.info("Copy limit %d reached (copy_count=%d)" % (
