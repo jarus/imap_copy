@@ -145,12 +145,14 @@ class IMAP_Copy(object):
                     progress_count, mail_count))
                 continue
             else:
-                status, data = self._conn_source.fetch(msg_num, '(RFC822 FLAGS)')
+                status, data = self._conn_source.fetch(msg_num, '(RFC822 FLAGS INTERNALDATE)')
+                flag_line = data[0][0]
                 message = data[0][1]
-                flags = data[1][8:][:-2]  # Not perfect.. Waiting for bug reports
+                flags = flag_line[flag_line.index('FLAGS (') + len('FLAGS (') - 1:flag_line.index(' INTERNALDATE')]
+                internaldate = flag_line[flag_line.index('INTERNALDATE ') + len('INTERNALDATE '):flag_line.index(' RFC822')]
 
                 self._conn_destination.append(
-                    destination_mailbox, flags, None, message
+                    destination_mailbox, flags, internaldate, message,
                 )
 
                 copy_count += 1
