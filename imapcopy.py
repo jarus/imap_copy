@@ -102,6 +102,7 @@ class IMAP_Copy(object):
             self.logger.info("Create destination mailbox %s" %
                              destination_mailbox)
             self._conn_destination.create(destination_mailbox)
+            self._conn_destination.subscribe(destination_mailbox)
             status, data = self._conn_destination.select(destination_mailbox)
 
         # Look for mails
