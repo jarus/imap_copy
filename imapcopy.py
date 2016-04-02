@@ -14,6 +14,7 @@ import hashlib
 import imaplib
 import logging
 import argparse
+import email
 
 
 class IMAP_Copy(object):
@@ -127,9 +128,11 @@ class IMAP_Copy(object):
                 status, data = self._conn_source.fetch(msg_num, '(RFC822 FLAGS)')
                 message = data[0][1]
                 flags = data[1][8:][:-2]  # Not perfect.. Waiting for bug reports
+                msg = email.message_from_string(message);
+                msgDate = email.utils.parsedate(msg['Date'])
 
                 self._conn_destination.append(
-                    destination_mailbox, flags, None, message
+                    destination_mailbox, flags, msgDate, message
                 )
 
                 copy_count += 1
