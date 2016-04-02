@@ -37,6 +37,16 @@ message no. 124 to 223 into Gmail.
     "imap.googlemail.com:993" "username@gmail.com:password" \
     "INBOX" "OTHER-SERVER/Inbox" --skip 123 --limit 100
 
+There is also 'recurse' option that copies contents of folders with all of
+its subfolders. Also if you replace source mailbox with empty string, it will
+copy all contents of that mailbox:
+
+:: 
+
+    python imapcopy.py "imap.otherserver.com.au:993" "username:password" \
+    "imap.googlemail.com:993" "username@gmail.com:password" \
+    "" "OTHER-SERVER" --recurse
+
 Usage:
 
 ::
@@ -58,6 +68,7 @@ Usage:
       -h, --help        show this help message and exit
       -c, --create-mailboxes
                         Create the mailboxes on destination
+      -r, --recurse     Recurse into submailboxes
       -q, --quiet       ppsssh... be quiet. (no output)
       -v, --verbose     more output please (debug level)
       -s N, --skip N    skip the first N message(s)
