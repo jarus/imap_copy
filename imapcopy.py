@@ -67,7 +67,7 @@ class IMAP_Copy(object):
         self.logger.info("%s connection established" % target)
         # Detecting delimiter on destination server
         code, mailbox_list = connection.list()
-        self.delimiter = mailbox_list[0].split('"')[1]
+        setattr(self, '_%s_delimiter' % target, mailbox_list[0].split('"')[1])
 
     def connect(self):
         self._connect('source')
@@ -98,10 +98,10 @@ class IMAP_Copy(object):
             for d in data:
                 if d:
                     new_source_mailbox = d.split('"')[3]  # Getting submailbox name
-                    if new_source_mailbox.count('/') == recurse_level:
+                    if new_source_mailbox.count(self._source_delimiter) == recurse_level:
                         self.logger.info("Recursing into %s" % new_source_mailbox)
-                        new_destination_mailbox = new_source_mailbox.split("/")[recurse_level]
-                        self.copy(new_source_mailbox, destination_mailbox + self.delimiter + new_destination_mailbox,
+                        new_destination_mailbox = new_source_mailbox.split(self._source_delimiter)[recurse_level]
+                        self.copy(new_source_mailbox, destination_mailbox + (destination_mailbox + self._destination_delimiter if destination_mailbox else "") + new_destination_mailbox,
                                   skip, limit, recurse_level + 1)
 
         # There should be no files stored in / so we are bailing out
