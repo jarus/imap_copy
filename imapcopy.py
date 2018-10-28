@@ -101,7 +101,7 @@ class IMAP_Copy(object):
                     if new_source_mailbox.count(self._source_delimiter) == recurse_level:
                         self.logger.info("Recursing into %s" % new_source_mailbox)
                         new_destination_mailbox = new_source_mailbox.split(self._source_delimiter)[recurse_level]
-                        self.copy(new_source_mailbox, destination_mailbox + (destination_mailbox + self._destination_delimiter if destination_mailbox else "") + new_destination_mailbox,
+                        self.copy(new_source_mailbox, (destination_mailbox + self._destination_delimiter if destination_mailbox else "") + new_destination_mailbox,
                                   skip, limit, recurse_level + 1)
 
         # There should be no files stored in / so we are bailing out
