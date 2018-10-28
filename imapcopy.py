@@ -32,7 +32,7 @@ class IMAP_Copy(object):
 
     def __init__(self, source_server, destination_server, mailbox_mapping,
                  source_auth=(), destination_auth=(), create_mailboxes=False,
-                 recurse=False, skip=0, limit=0):
+                 recurse=False, skip=0, limit=0, no_messages=False):
 
         self.logger = logging.getLogger("IMAP_Copy")
 
@@ -46,6 +46,7 @@ class IMAP_Copy(object):
 
         self.skip = skip
         self.limit = limit
+        self.no_messages = no_messages
 
         self.recurse = recurse
 
@@ -128,6 +129,9 @@ class IMAP_Copy(object):
             self._conn_destination.subscribe(destination_mailbox)
             status, data = self._conn_destination.select(destination_mailbox)
 
+        if self.no_messages:
+            return
+
         # Look for mails
         self.logger.info("Looking for mails in %s" % source_mailbox)
         status, data = self._conn_source.search(None, 'ALL')
@@ -200,6 +204,8 @@ def main():
     parser.add_argument('-c', '--create-mailboxes', dest='create_mailboxes',
                         action="store_true", default=False,
                         help='Create the mailboxes on destination')
+    parser.add_argument('-n', '--no-messages', action="store_true", default=False,
+                        help="don't copy messages (use with --create-mailboxes to only create folder structure)")
     parser.add_argument('-r', '--recurse', dest='recurse', action="store_true",
                         default=False, help='Recurse into submailboxes')
     parser.add_argument('-q', '--quiet', action="store_true", default=False,
@@ -241,7 +247,8 @@ def main():
 
     imap_copy = IMAP_Copy(source, destination, mailbox_mapping, source_auth,
                           destination_auth, create_mailboxes=args.create_mailboxes,
-                          recurse=args.recurse, skip=args.skip, limit=args.limit)
+                          recurse=args.recurse, skip=args.skip, limit=args.limit,
+                          no_messages=args.no_messages)
 
     streamHandler = logging.StreamHandler()
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
