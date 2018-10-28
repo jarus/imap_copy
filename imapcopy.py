@@ -153,6 +153,12 @@ class IMAP_Copy(object):
                 msg = email.message_from_string(message);
                 msgDate = email.utils.parsedate(msg['Date'])
 
+                # Attempt to correct for negative hour values
+                if msgDate[3] < 0:
+                  newDate = list(msgDate)
+                  newDate[3] = 24 + newDate[3]
+                  msgDate = tuple(newDate)
+
                 self._conn_destination.append(
                     destination_mailbox, flags, msgDate, message
                 )
