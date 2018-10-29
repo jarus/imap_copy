@@ -154,7 +154,7 @@ class IMAP_Copy(object):
                 msgDate = email.utils.parsedate(msg['Date'])
 
                 # Attempt to correct for negative hour values
-                if msgDate[3] < 0:
+                if msgDate and msgDate[3] < 0:
                   newDate = list(msgDate)
                   newDate[3] = 24 + newDate[3]
                   msgDate = tuple(newDate)
