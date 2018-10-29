@@ -97,7 +97,9 @@ class IMAP_Copy(object):
             typ, data = connection.list(source_mailbox)
             for d in data:
                 if d:
-                    new_source_mailbox = d.split('"')[3]  # Getting submailbox name
+                    index1 = d.find('"')
+                    index2 = d.find('"', index1 + 1)
+                    new_source_mailbox = d[index2:].strip(' "')
                     if new_source_mailbox.count('/') == recurse_level:
                         self.logger.info("Recursing into %s" % new_source_mailbox)
                         new_destination_mailbox = new_source_mailbox.split("/")[recurse_level]
