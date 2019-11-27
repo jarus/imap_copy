@@ -92,17 +92,24 @@ class IMAP_Copy(object):
 
     def copy(self, source_mailbox, destination_mailbox, skip, limit, recurse_level=0):
         if self.recurse:
-            self.logger.info("Getting list of mailboxes under %s" % source_mailbox)
+            self.logger.info(
+                "Getting list of mailboxes under %s" % source_mailbox)
             connection = self._conn_source
             typ, data = connection.list(source_mailbox)
             for d in data:
                 if d:
-                    new_source_mailbox = d.split('"')[3]  # Getting submailbox name
-                    if new_source_mailbox.count('/') == recurse_level:
-                        self.logger.info("Recursing into %s" % new_source_mailbox)
-                        new_destination_mailbox = new_source_mailbox.split("/")[recurse_level]
-                        self.copy(new_source_mailbox, destination_mailbox + self.delimiter + new_destination_mailbox,
-                                  skip, limit, recurse_level + 1)
+                    if '\HasNoChildren' in d:
+                        self.logger.info("No further recursion needed")
+                    else:
+                        self.logger.info(d.split('"'))
+                        new_source_mailbox = d.split('"')[2].lstrip() # Getting submailbox name
+                        if new_source_mailbox.count('/') == recurse_level:
+                            self.logger.info("Recursing into %s" %
+                                             new_source_mailbox)
+                            new_destination_mailbox = new_source_mailbox.split(
+                                "/")[recurse_level]
+                            self.copy(new_source_mailbox, destination_mailbox + self.delimiter + new_destination_mailbox,
+                                      skip, limit, recurse_level + 1)
 
         # There should be no files stored in / so we are bailing out
         if source_mailbox == '':
@@ -147,10 +154,12 @@ class IMAP_Copy(object):
                     progress_count, mail_count))
                 continue
             else:
-                status, data = self._conn_source.fetch(msg_num, '(RFC822 FLAGS)')
+                status, data = self._conn_source.fetch(
+                    msg_num, '(RFC822 FLAGS)')
                 message = data[0][1]
-                flags = data[1][8:][:-2]  # Not perfect.. Waiting for bug reports
-                msg = email.message_from_string(message);
+                # Not perfect.. Waiting for bug reports
+                flags = data[1][8:][:-2]
+                msg = email.message_from_string(message)
                 msgDate = email.utils.parsedate(msg['Date'])
 
                 self._conn_destination.append(
@@ -175,7 +184,8 @@ class IMAP_Copy(object):
         try:
             self.connect()
             for source_mailbox, destination_mailbox in self.mailbox_mapping:
-                self.copy(source_mailbox, destination_mailbox, self.skip, self.limit)
+                self.copy(source_mailbox, destination_mailbox,
+                          self.skip, self.limit)
         finally:
             self.disconnect()
 
@@ -210,7 +220,8 @@ def main():
     def check_negative(value):
         ivalue = int(value)
         if ivalue < 0:
-            raise argparse.ArgumentTypeError("%s is an invalid positive integer value" % value)
+            raise argparse.ArgumentTypeError(
+                "%s is an invalid positive integer value" % value)
         return ivalue
 
     parser.add_argument("-s", "--skip", default=0, metavar="N", type=check_negative,
