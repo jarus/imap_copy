@@ -3,6 +3,7 @@ IMAP Copy
 
 This is a very simple tool to copy folders from one IMAP server to another server.
 
+It requires Python 3.5 or later.
 
 Example:
 
@@ -11,7 +12,7 @@ the 'OTHER-SERVER/Inbox' folder of Gmail.
 
 ::
 
-    python imapcopy.py "imap.otherserver.com.au:993" "username:password" \
+    python3 imapcopy.py "imap.otherserver.com.au:993" "username:password" \
     "imap.googlemail.com:993" "username@gmail.com:password" \
     "INBOX" "OTHER-SERVER/Inbox" --verbose
 
@@ -23,7 +24,7 @@ messages.
 
 ::
 
-    python imapcopy.py "imap.otherserver.com.au:993" "username:password" \
+    python3 imapcopy.py "imap.otherserver.com.au:993" "username:password" \
     "imap.googlemail.com:993" "username@gmail.com:password" \
     "INBOX" "OTHER-SERVER/Inbox" --skip 123
 
@@ -33,7 +34,7 @@ message no. 124 to 223 into Gmail.
 
 ::
 
-    python imapcopy.py "imap.otherserver.com.au:993" "username:password" \
+    python3 imapcopy.py "imap.otherserver.com.au:993" "username:password" \
     "imap.googlemail.com:993" "username@gmail.com:password" \
     "INBOX" "OTHER-SERVER/Inbox" --skip 123 --limit 100
 
@@ -43,7 +44,7 @@ copy all contents of that mailbox:
 
 :: 
 
-    python imapcopy.py "imap.otherserver.com.au:993" "username:password" \
+    python3 imapcopy.py "imap.otherserver.com.au:993" "username:password" \
     "imap.googlemail.com:993" "username@gmail.com:password" \
     "" "OTHER-SERVER" --recurse
 
@@ -73,5 +74,3 @@ Usage:
       -v, --verbose     more output please (debug level)
       -s N, --skip N    skip the first N message(s)
       -l N, --limit N   only copy N number of message(s)
-  
-Only tested on Python 2.7.
