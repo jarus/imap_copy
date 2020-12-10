@@ -66,6 +66,18 @@ class IMAP_Copy(object):
         self.logger.info("%s connection established" % target)
         # Detecting delimiter on destination server
         code, mailbox_list = connection.list()
+
+        mailbox_name_list = []
+        for box in mailbox_list:
+            parts = box.decode('utf-8').split('"')
+            if len(parts) == 5:
+                mailbox_name_list.append(parts[3].strip())
+            elif len(parts) == 3:
+                mailbox_name_list.append(parts[2].strip())
+
+        mailbox_names = ', '.join(mailbox_name_list)
+        self.logger.info("%s has the following mailboxes: %s" % (target, mailbox_names))
+
         self.delimiter = mailbox_list[0].split(b'"')[1]
 
     def connect(self):
