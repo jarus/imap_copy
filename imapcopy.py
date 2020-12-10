@@ -179,6 +179,12 @@ class IMAP_Copy(object):
         try:
             self.connect()
             for source_mailbox, destination_mailbox in self.mailbox_mapping:
+
+                if ' ' in source_mailbox and '"' not in source_mailbox:
+                    source_mailbox = '"%s"' % source_mailbox
+                if ' ' in destination_mailbox and '"' not in destination_mailbox:
+                    destination_mailbox = '"%s"' % destination_mailbox
+
                 self.copy(source_mailbox, destination_mailbox, self.skip, self.limit)
         finally:
             self.disconnect()
