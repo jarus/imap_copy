@@ -66,7 +66,7 @@ class IMAP_Copy(object):
         self.logger.info("%s connection established" % target)
         # Detecting delimiter on destination server
         code, mailbox_list = connection.list()
-        self.delimiter = mailbox_list[0].split('"')[1]
+        self.delimiter = mailbox_list[0].split(b'"')[1]
 
     def connect(self):
         self._connect('source')
@@ -238,10 +238,10 @@ def main():
     destination_auth = tuple(args.destination_auth.split(':'))
 
     if len(args.mailboxes) % 2 != 0:
-        print "Not valid count of mailboxes!"
+        print("Not valid count of mailboxes!")
         sys.exit(1)
 
-    mailbox_mapping = zip(args.mailboxes[::2], args.mailboxes[1::2])
+    mailbox_mapping = list(zip(args.mailboxes[::2], args.mailboxes[1::2]))
 
     imap_copy = IMAP_Copy(source, destination, mailbox_mapping, source_auth,
                           destination_auth, create_mailboxes=args.create_mailboxes,
