@@ -147,16 +147,26 @@ class IMAP_Copy(object):
             else:
                 status, data = self._conn_source.fetch(msg_num, '(RFC822 FLAGS INTERNALDATE)')
 
-                flag_line = data[0][0].decode('ascii')
-                if flag_line.find('FLAGS') < 0 and len(data) > 1:
-                    flag_line = data[1].decode('ascii')
+                flags_line = data[0][0].decode('ascii')
+                if flags_line.find('FLAGS') < 0 and len(data) > 1:
+                    flags_line = data[1].decode('ascii')
                 message = data[0][1]
 
-                flags = flag_line[flag_line.index('FLAGS (') + len('FLAGS (') - 1:flag_line.index(' INTERNALDATE')]
-                end_date_str = flag_line.find(' RFC822')
-                if end_date_str < 0:
-                    end_date_str = flag_line.index(')', flag_line.index('INTERNALDATE '))
-                internaldate = flag_line[flag_line.index('INTERNALDATE ') + len('INTERNALDATE '):end_date_str]
+                flags_start = flags_line.index('FLAGS (') + len('FLAGS (')
+                flags_end = flags_line.index(')', flags_start)
+
+                flags = '(' + flags_line[flags_start:flags_end] + ')'
+
+                internaldate_start = flags_line.index('INTERNALDATE ') + len('INTERNALDATE ')
+                internaldate_end = flags_line.find(' RFC822', internaldate_start)
+                if internaldate_end < 0:
+                    internaldate_end = flags_line.find(' FLAGS', internaldate_start)
+                if internaldate_end < 0:
+                    internaldate_end = flags_line.find(')', internaldate_start)
+                if internaldate_end < 0:
+                    internaldate_end = len(flags_line)
+
+                internaldate = flags_line[internaldate_start:internaldate_end]
 
                 self._conn_destination.append(
                     destination_folder, flags, internaldate, message,
